@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gutscheinrechner</title>
+    <meta charset="utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <link rel="stylesheet" type="text/css" href="css/index.css" />
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+    <script type="text/javascript">
+        app.initialize();
+    </script>
+
+    <!-- FontAwesome - http://fortawesome.github.io/Font-Awesome/ -->
+    <link rel="stylesheet" href="css/font-awesome.min.css" />
+
+    <!-- jQueryMobileCSS - original without styling -->
+
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.3/jquery.mobile-1.4.3.min.css" />
+
+    <!-- nativeDroid: Color Schemes -->
+    <link rel="stylesheet" href="css/jquerymobile.nativedroid.color.blue.css" id='jQMnDColor' />
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.3/jquery.mobile-1.4.3.min.js"></script>
+
+    <script type="text/javascript" charset="UTF-8">
+        $(document).ready(function() {
+            var voucherAmount = window.localStorage.getItem("voucherAmount");
+            if (voucherAmount != null) {
+                voucherAmount = voucherAmount.replace('.', ',');
+                $('#voucher-amount-output').html(voucherAmount);
+            }
+        });
+    </script>
+
+    <script type="text/javascript" charset="utf-8">
+        function store_options() {
+            var voucherElement = $('#voucher-amount');
+            var voucherAmount = voucherElement.val();
+            var regex  = /^\d+(?:[\.,]{0,1}\d{0,2})$/;
+            if (!regex.test(voucherAmount)) {
+                alert('Der eingegebene Wert ist ungültig');
+                voucherElement.val("");
+            } else {
+                voucherAmount = parseFloat(voucherAmount.replace(',', '.')).toFixed(2);
+                window.localStorage.setItem("voucherAmount", voucherAmount);
+                window.location = 'index.html';
+            }
+        }
+
+        function calculate() {
+            var billElement = $('#bill-amount');
+            var billAmount = billElement.val();
+            var regex  = /^\d+(?:[\.,]{0,1}\d{0,2})$/;
+            if (!regex.test(billAmount)) {
+                alert('Der eingegebene Wert ist ungültig');
+                billElement.val("");
+            } else {
+                billAmount = parseFloat(billAmount.replace(',', '.')).toFixed(2);
+                var voucherAmount = window.localStorage.getItem("voucherAmount");
+                var vouchers = Math.floor(billAmount / parseFloat(voucherAmount));
+                var rest = billAmount - (vouchers * voucherAmount);
+                var restAmount = rest.toFixed(2).replace('.', ',');
+
+                if (vouchers > 0) {
+                    // Nur ein Gutschein erlaubt
+                    var restIfOne = billAmount - voucherAmount;
+                    var listHtml = '<li data-role="list-divider">Nur ein Gutschein erlaubt</li>';
+                    listHtml += '<li>Gutscheine <span class="ui-li-count">1</span></li>';
+                    listHtml += '<li>Restgeld zu zahlen <span class="ui-li-count">' + restIfOne.toFixed(2).replace('.', ',') + ' EUR</span></li>';
+                    $('#voucherlist').html(listHtml);
+
+                    // Beliebig viele Gutscheine, aber keine Restgeldrückgabe
+                    listHtml += '<li data-role="list-divider">Beliebig viele Gutscheine, keine Restgeldrückgabe</li>';
+                    listHtml += '<li>Gutscheine <span class="ui-li-count">' + vouchers + '</span></li>';
+                    listHtml += '<li>Restgeld zu zahlen <span class="ui-li-count">' + restAmount + ' EUR</span></li>';
+                    $('#voucherlist').html(listHtml);
+
+                    // Beliebig viele Gutscheine und Restgeldrückgabe
+                    vouchers++;
+                    var restToReturn = (vouchers * voucherAmount) - billAmount;
+                    restToReturn = restToReturn.toFixed(2).replace('.', ',');
+                    listHtml += '<li data-role="list-divider">Beliebig viele Gutscheine und Restgeldrückgabe</li>';
+                    listHtml += '<li>Gutscheine <span class="ui-li-count">' + vouchers + '</span></li>';
+                    listHtml += '<li>Restgeld zurück <span class="ui-li-count">' + restToReturn + ' EUR</span></li>';
+                    $('#voucherlist').html(listHtml).listview('refresh').css('display', 'block');
+                    $('#reset-form').css('display', 'block');
+
+                    $('#footer').hide();
+                }
+            }
+        }
+
+        function resetForm() {
+            location.href = "index.html";
+        }
+    </script>
+</head>
+<body>
+
+<div data-role="page" id="calculate" data-theme="b">
+
+    <div data-role="header" data-theme="b">
+        <h1>Gutscheinrechner</h1>
+    </div><!-- /header -->
+
+    <div role="main" class="ui-content">
+        <div class="inset">
+            <h6>Der zugrundeliegende Gutscheinwert beträgt <span id="voucher-amount-output">0,00</span> EUR.</h6>
+        </div>
+        <form onsubmit="calculate(); return false;">
+            <ul data-role="listview" data-inset="true">
+                <li class="ui-field-contain">
+                    <input type="text" placeholder="Rechnungsbetrag" name="bill-amount" id="bill-amount" value="" data-clear-btn="true">
+                    <button type="submit" class="ui-btn ui-corner-all">Ausrechnen</button>
+                </li>
+            </ul>
+        </form>
+        <div class="inset">
+            <ul style="display: none;" id="voucherlist" data-role="listview" data-inset="true" data-theme="b" data-divider-theme="a" data-count-theme="a">
+            </ul>
+            <form onsubmit="resetForm(); return false;" style="display: none;" id="reset-form">
+                <button type="submit" class="ui-btn ui-corner-all">Zurücksetzen</button>
+            </form>
+        </div>
+    </div><!-- /content -->
+
+    <div data-role="footer" data-position="fixed" data-theme="b" id="footer">
+        <div data-role="navbar">
+            <ul>
+                <li><a data-transition="none" href="#calculate" data-icon="grid" class="ui-btn-active ui-state-persist">Rechner</a></li>
+                <!--<li><a data-transition="none" href="#" data-icon="eye" class="ui-btn-active ui-state-persist">Historie</a></li>-->
+                <li><a data-transition="none" href="#my-options" data-icon="gear">Optionen</a></li>
+            </ul>
+        </div><!-- /navbar -->
+    </div><!-- /footer -->
+</div><!-- /page -->
+
+<div data-role="page" id="my-options" data-theme="b">
+
+    <div data-role="header" data-theme="b">
+        <h1>Gutscheinrechner</h1>
+    </div><!-- /header -->
+
+    <div role="main" class="ui-content">
+        <form onsubmit="store_options(); return false;">
+            <ul data-role="listview" data-inset="true">
+                <li class="ui-field-contain">
+                    <input type="text" placeholder="Gutscheinwert" name="voucher-amount" id="voucher-amount" value="" data-clear-btn="true">
+                    <button type="submit" class="ui-btn ui-corner-all">Speichern</button>
+                </li>
+            </ul>
+        </form>
+    </div><!-- /content -->
+
+    <div data-role="footer" data-position="fixed" data-theme="b" id="footer">
+        <div data-role="navbar">
+            <ul>
+                <li><a data-transition="none" href="#calculate" data-icon="grid">Rechner</a></li>
+                <!--<li><a data-transition="none" href="#" data-icon="eye" class="ui-btn-active ui-state-persist">Historie</a></li>-->
+                <li><a data-transition="none" href="#my-options" data-icon="gear" class="ui-btn-active ui-state-persist">Optionen</a></li>
+            </ul>
+        </div><!-- /navbar -->
+    </div><!-- /footer -->
+</div><!-- /page -->
+
+</body>
+</html>
