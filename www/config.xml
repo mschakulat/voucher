@@ -2,10 +2,10 @@
 <widget id="de.fetchit.voucher" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:gap="http://phonegap.com/ns/1.0">
     <name>Gutscheinrechner</name>
     <description>
-        Hello World sample application that responds to the deviceready event.
+        Berechnung von der Anzahl von Gutscheinen auf Basis eines variablen Gutscheinwertes.
     </description>
-    <author email="support@phonegap.com" href="http://phonegap.com">
-        PhoneGap Team
+    <author email="michael@abouttheweb.de" href="http://www.abouttheweb.de">
+        Michael Schakulat
     </author>
     <preference name="permissions" value="none" />
     <preference name="phonegap-version" value="3.5.0" />
